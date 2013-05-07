@@ -1,5 +1,5 @@
 #RequireAdmin;
-
+undoLoginBypass()
 Func undoLoginBypass()
    Send("#r") ;run
    WinWaitActive("Run")

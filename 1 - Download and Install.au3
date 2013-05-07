@@ -1,43 +1,63 @@
 #RequireAdmin
 
-$version_counter = 1
+
 $configuration_file = getConfigurationFile("configuration.properties")
-$download_path = "C:\FirefoxProject\downloads\"
-$installation_path = "C:\FirefoxProject\installs\"
-;$version = getVersion($configuration_file, $version_counter)
+$download_path = IniRead("credentials.ini","Paths","download","ERROR -1")
+$installation_path = IniRead("credentials.ini","Paths","installation","ERROR -1")
+$defaultUsername = IniRead("credentials.ini","Credentials","username","ERROR -1")
+$defaultPassword = IniRead("credentials.ini","Credentials","password","ERROR -1")
 
 
-;~ MsgBox(0,"","open chrome",1)
-openChrome()
-;~ MsgBox(0,"","go to download",1)
-goToDownloadPage()
-While 1
-   $version = getVersion($configuration_file, $version_counter)
-   If $version = "" Then ExitLoop
-   WinWaitActive("Old Version of Firefox Download - OldApps.com - Google Chrome")
-;~    If $version_counter = 1 Then MsgBox(0,"","find version "&$version,1)
-   findVersion($version)
-;~    If $version_counter = 1 Then MsgBox(0,"","select it",1)
-   pickSelectedVersion($version)
-;~    If $version_counter = 1 Then MsgBox(0,"","Download it",1)
-   downloadOneVersion($version, $download_path)
-   $version_counter = $version_counter + 1
-WEnd
-MsgBox(0,"Done","Done downloading",2)
-$version_counter = 1
-While 1
-   $version = getVersion($configuration_file, $version_counter)
-   If $version = "" Then ExitLoop
-   If $version_counter = 1 Then MsgBox(0,"","Run once download is finished",1)
-   runDownloadedInstaller($version, $download_path)
-   If $version_counter = 1 Then MsgBox(0,"","install",1)
-   installFirefox($version, $installation_path)
-   $version_counter = $version_counter + 1
-WEnd   
-MsgBox(0,"Done","Done installing",2)
+getCredentials()
+;downloadEverything()
+;installEverything()
+;restart()
+
+
+
+
+Func downloadEverything()
+   
+   $version_counter = 1
+   ;~ MsgBox(0,"","open chrome",1)
+   openChrome()
+   ;~ MsgBox(0,"","go to download",1)
+   goToDownloadPage()
+   While 1
+	  $version = getVersion($configuration_file, $version_counter)
+	  If $version = "" Then ExitLoop
+	  WinWaitActive("Old Version of Firefox Download - OldApps.com - Google Chrome")
+	  MsgBox(0,"","find version "&$version,1)
+	  findVersion($version)
+	  MsgBox(0,"","select it",1)
+	  pickSelectedVersion($version)
+	  MsgBox(0,"","Download it",1)
+	  downloadOneVersion($version, $download_path)
+	  $version_counter = $version_counter + 1
+   WEnd
+   MsgBox(0,"Done","Done downloading",2)
+EndFunc
+
+Func installEverything()
+   $version_counter = 1
+   While 1
+	  $version = getVersion($configuration_file, $version_counter)
+	  If $version = "" Then ExitLoop
+	  If $version_counter = 1 Then MsgBox(0,"","Run once download is finished",1)
+	  runDownloadedInstaller($version, $download_path)
+	  If $version_counter = 1 Then MsgBox(0,"","install",1)
+	  installFirefox($version, $installation_path)
+	  $version_counter = $version_counter + 1
+   WEnd   
+   MsgBox(0,"Done","Done installing",2)
+EndFunc
 FileClose("configuration.properties")
 
-;ProcessClose("chrome.exe")
+Func restart()
+   createStartupShortcut()
+   bypassLogin($username, $password)
+   reboot()
+EndFunc
 
 Func openChrome()
    Run("C:\Program Files (x86)\Google\Chrome\Application\chrome.exe")
@@ -54,7 +74,7 @@ Func goToDownloadPage()
    Send("^l")
    Send("http://www.oldapps.com/firefox.php")
    Send("{Enter}")
-   Sleep(5000)
+   Sleep(3500)
 EndFunc
 
 Func findVersion($version)
@@ -103,6 +123,7 @@ Func downloadOneVersion($version, $download_path)
    WinActivate("Old Version of "&$version&" Download - OldApps.com - Google Chrome")
    Sleep(30)
    Send("^w")
+   Sleep(50)
 EndFunc
 
 Func runDownloadedInstaller($version, $download_path)
@@ -166,6 +187,7 @@ Func getVersion($configuration_file, $line)
 EndFunc
 
 Func bypassLogin($username, $password)
+   ;TODO - read checkbox
    Send("#r") ;run
    WinWaitActive("Run")
    Send("netplwiz")
@@ -187,3 +209,29 @@ Func bypassLogin($username, $password)
    Send("{Enter}")
 EndFunc
 
+Func reboot()
+   Run("shutdown -r -f -t 10")
+   sleep(2000)
+   Send("{Space}")
+EndFunc
+
+Func getUsername($defaultUsername)
+   $username = InputBox("Username", "Please type your system username. This is required to login later", $defaultUsername,"",-1,-1,500,400,2)
+   If $username = "" Then $username = $defaultUsername
+   Return $username
+EndFunc
+
+Func getPassword($defaultPassword)
+   $password = InputBox("Password", "Please type your system password. This is required to login later", $defaultPassword,"*",-1,-1,500,400,2)
+   If $password = "" Then $password = $defaultPassword
+   Return $password
+EndFunc
+
+Func getCredentials()
+   getUsername($defaultUsername)
+   getPassword($defaultPassword)
+EndFunc
+
+Func createStartupShortcut()
+   FileCreateShortcut(@workingdir&"\2 - secondPhase.au3",@StartupDir&"\firefoxStartup.lnk")
+EndFunc
