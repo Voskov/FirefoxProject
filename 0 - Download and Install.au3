@@ -23,6 +23,7 @@ While 1
    downloadOneVersion($version, $download_path)
    $version_counter = $version_counter + 1
 WEnd
+MsgBox(0,"Done","Done downloading",2)
 $version_counter = 1
 While 1
    $version = getVersion($configuration_file, $version_counter)
@@ -33,7 +34,7 @@ While 1
    installFirefox($version, $installation_path)
    $version_counter = $version_counter + 1
 WEnd   
-
+MsgBox(0,"Done","Done installing",2)
 FileClose("configuration.properties")
 
 ;ProcessClose("chrome.exe")
@@ -116,29 +117,29 @@ Func installFirefox($version, $installation_path)
    WinActivate("Mozilla Firefox Setup")
    WinWaitActive("Mozilla Firefox Setup")
    SendKeepActive("Mozilla Firefox Setup")
-   ;Sleep(1000)
+   Sleep(100)
    Send("!n") ;1st next
-   ;Sleep(1000)
+   Sleep(100)
    Send("!c") ;choose custom
-   ;Sleep(1000)
+   Sleep(100)
    Send("!n") ;next
    Send($installation_path&$version) ;insert installation path
-   ;Sleep(1000)
+   Sleep(100)
    Send("!n") ;next
-   ;Sleep(1000)
+   Sleep(100)
    Send("!ds") ;remove checkboxes (desktop and start menu)
-   ;Sleep(1000)
+   Sleep(100)
    Send("!n") ;next
-   ;Sleep(1000)
+   Sleep(100)
    if (winGetText("Mozilla Firefox Setup", "Install")) <> "0" Then
 	  Send("!i") ;install
    ElseIf (winGetText("Mozilla Firefox Setup", "Upgrade")) <> "0" Then
 	  Send("!u") ;upgrade
    EndIf
-   ;Sleep(1000)
+   Sleep(100)
    WinWait("Mozilla Firefox Setup","Completing the Mozilla Firefox Setup Wizard",200)
    Send("!l") ;don't launch
-   ;Sleep(1000)
+   Sleep(100)
    Send("!f") ;finish
 EndFunc
    
