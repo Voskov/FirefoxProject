@@ -1,0 +1,2 @@
+#RequireAdmin;
+ProcessClose("firefox.exe")
