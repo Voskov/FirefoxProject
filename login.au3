@@ -1,6 +1,6 @@
 #RequireAdmin;
-$username = IniRead("credentials.ini","Vosktop","username","ERROR -1")
-$password = IniRead("credentials.ini","Vosktop","password","ERROR -1")
+$username = IniRead("credentials.ini","Credentials","username","ERROR -1")
+$password = IniRead("credentials.ini","Credentials","password","ERROR -1")
 
 
 bypassLogin($username, $password)

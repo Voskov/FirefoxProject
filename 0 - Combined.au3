@@ -11,19 +11,19 @@ MsgBox(0,"","open chrome",1)
 openChrome()
 MsgBox(0,"","go to download",1)
 goToDownloadPage()
-while 
-   $version = getVersion($configuration_file, $version_counter) ;I know I can do it w/o the counter, but I feel "safer" like this.
+;~ while 
+;~    $version = getVersion($configuration_file, $version_counter) ;I know I can do it w/o the counter, but I feel "safer" like this.
 ;~    If @error = -1 Then ExitLoop ;breaks the loop when configuration file is done
 ;~    If $version = "" Then ExitLoop ;breaks the loop when configuration file is done
-   WinWaitActive("Old Version of Firefox Download - OldApps.com - Google Chrome")
-   MsgBox(0,"","find version "&$version,1)
-   findVersion($version)
-   MsgBox(0,"","select it",1)
-   pickSelectedVersion($version)
-   MsgBox(0,"","Download it",1)
-   downloadOneVersion($version, $download_path)
-   $version_counter = $version_counter + 1
-WEnd
+;~    WinWaitActive("Old Version of Firefox Download - OldApps.com - Google Chrome")
+;~    MsgBox(0,"","find version "&$version,1)
+;~    findVersion($version)
+;~    MsgBox(0,"","select it",1)
+;~    pickSelectedVersion($version)
+;~    MsgBox(0,"","Download it",1)
+;~    downloadOneVersion($version, $download_path)
+;~    $version_counter = $version_counter + 1
+;~ WEnd
 ;~ MsgBox(0,"","Run once finished",1)
 ;~ runDownloadedInstaller($version, $download_path)
 ;~ MsgBox(0,"","install",1)
