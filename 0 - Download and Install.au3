@@ -7,27 +7,34 @@ $installation_path = "C:\FirefoxProject\installs\"
 ;$version = getVersion($configuration_file, $version_counter)
 
 
-MsgBox(0,"","open chrome",1)
+;~ MsgBox(0,"","open chrome",1)
 openChrome()
-MsgBox(0,"","go to download",1)
+;~ MsgBox(0,"","go to download",1)
 goToDownloadPage()
-;~ while 
-;~    $version = getVersion($configuration_file, $version_counter) ;I know I can do it w/o the counter, but I feel "safer" like this.
-;~    If @error = -1 Then ExitLoop ;breaks the loop when configuration file is done
-;~    If $version = "" Then ExitLoop ;breaks the loop when configuration file is done
-;~    WinWaitActive("Old Version of Firefox Download - OldApps.com - Google Chrome")
-;~    MsgBox(0,"","find version "&$version,1)
-;~    findVersion($version)
-;~    MsgBox(0,"","select it",1)
-;~    pickSelectedVersion($version)
-;~    MsgBox(0,"","Download it",1)
-;~    downloadOneVersion($version, $download_path)
-;~    $version_counter = $version_counter + 1
-;~ WEnd
-;~ MsgBox(0,"","Run once finished",1)
-;~ runDownloadedInstaller($version, $download_path)
-;~ MsgBox(0,"","install",1)
-;~ installFirefox($version, $installation_path)
+While 1
+   $version = getVersion($configuration_file, $version_counter)
+   If $version = "" Then ExitLoop
+   WinWaitActive("Old Version of Firefox Download - OldApps.com - Google Chrome")
+;~    If $version_counter = 1 Then MsgBox(0,"","find version "&$version,1)
+   findVersion($version)
+;~    If $version_counter = 1 Then MsgBox(0,"","select it",1)
+   pickSelectedVersion($version)
+;~    If $version_counter = 1 Then MsgBox(0,"","Download it",1)
+   downloadOneVersion($version, $download_path)
+   $version_counter = $version_counter + 1
+WEnd
+$version_counter = 1
+While 1
+   $version = getVersion($configuration_file, $version_counter)
+   If $version = "" Then ExitLoop
+   If $version_counter = 1 Then MsgBox(0,"","Run once download is finished",1)
+   runDownloadedInstaller($version, $download_path)
+   If $version_counter = 1 Then MsgBox(0,"","install",1)
+   installFirefox($version, $installation_path)
+   $version_counter = $version_counter + 1
+WEnd   
+
+FileClose("configuration.properties")
 
 ;ProcessClose("chrome.exe")
 
@@ -109,29 +116,29 @@ Func installFirefox($version, $installation_path)
    WinActivate("Mozilla Firefox Setup")
    WinWaitActive("Mozilla Firefox Setup")
    SendKeepActive("Mozilla Firefox Setup")
-   Sleep(1000)
+   ;Sleep(1000)
    Send("!n") ;1st next
-   Sleep(1000)
+   ;Sleep(1000)
    Send("!c") ;choose custom
-   Sleep(1000)
+   ;Sleep(1000)
    Send("!n") ;next
    Send($installation_path&$version) ;insert installation path
-   Sleep(1000)
+   ;Sleep(1000)
    Send("!n") ;next
-   Sleep(1000)
+   ;Sleep(1000)
    Send("!ds") ;remove checkboxes (desktop and start menu)
-   Sleep(1000)
+   ;Sleep(1000)
    Send("!n") ;next
-   Sleep(1000)
+   ;Sleep(1000)
    if (winGetText("Mozilla Firefox Setup", "Install")) <> "0" Then
 	  Send("!i") ;install
    ElseIf (winGetText("Mozilla Firefox Setup", "Upgrade")) <> "0" Then
 	  Send("!u") ;upgrade
    EndIf
-   Sleep(1000)
+   ;Sleep(1000)
    WinWait("Mozilla Firefox Setup","Completing the Mozilla Firefox Setup Wizard",200)
    Send("!l") ;don't launch
-   Sleep(1000)
+   ;Sleep(1000)
    Send("!f") ;finish
 EndFunc
    
