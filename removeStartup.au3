@@ -1,0 +1,1 @@
+FileDelete(@StartupDir&"\firefoxStartup.lnk")

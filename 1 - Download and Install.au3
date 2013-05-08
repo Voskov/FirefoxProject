@@ -7,7 +7,7 @@ $installation_path = IniRead(@WorkingDir&"\credentials.ini","Paths","installatio
 $defaultUsername = IniRead(@WorkingDir&"\credentials.ini","Credentials","username","ERROR -1")
 $defaultPassword = IniRead(@WorkingDir&"\credentials.ini","Credentials","password","ERROR -1")
 
-
+;~ createLog()
 getCredentials()
 downloadEverything()
 installEverything()
@@ -17,7 +17,6 @@ restart()
 
 
 Func downloadEverything()
-   
    $version_counter = 1
    ;~ MsgBox(0,"","open chrome",1)
    openChrome()
@@ -51,9 +50,9 @@ Func installEverything()
    WEnd   
    MsgBox(0,"Done","Done installing",2)
 EndFunc
-FileClose("configuration.properties")
 
 Func restart()
+   FileClose("configuration.properties")
    createStartupShortcut()
    bypassLogin($defaultUsername, $defaultPassword)
    reboot()
