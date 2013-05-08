@@ -3,12 +3,17 @@
 $configuration_file = getConfigurationFile(@WorkingDir&"\configuration.properties")
 $installation_path = IniRead(@WorkingDir&"\credentials.ini","Paths","installation","ERROR -1")
 
-MsgBox(0,"",@WorkingDir)
 
-Send("#d")
-Sleep(10000)
-;~ undoLoginBypass()
-openEveryFirefox()
+
+;~ rSend("#d")
+;~ Sleep(10000)
+undoStuff()
+;~ openEveryFirefox()
+
+Func undoStuff()
+   removeStartupLink()
+   undoLoginBypass()
+EndFunc
 
 Func openEveryFirefox()
    $version_counter = 1
@@ -56,4 +61,7 @@ EndFunc
 Func getVersion($configuration_file, $line)
    $version = FileReadLine($configuration_file, $line)
    return $version
+EndFunc
+Func removeStartupLink()
+   FileDelete(@StartupDir&"\firefoxStartup.lnk")
 EndFunc

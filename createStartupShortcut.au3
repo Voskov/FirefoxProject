@@ -4,7 +4,7 @@
 
 
 
-FileCreateShortcut(@workingdir&"\2 - secondPhase.au3",@StartupDir&"\firefoxStartup.lnk")
+FileCreateShortcut(@workingdir&"\2 - secondPhase.au3",@StartupDir&"\firefoxStartup.lnk",@workingdir)
 ;~ FileCreateShortcut("C:\Users\Einstine\Dropbox\Scripts\Firefox Projet\2 - secondPhase.au3","c:\Users\Einstine\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\firefoxStartup.lnk")
 
 

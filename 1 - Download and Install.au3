@@ -1,17 +1,17 @@
 #RequireAdmin
 
 
-$configuration_file = getConfigurationFile("configuration.properties")
-$download_path = IniRead("credentials.ini","Paths","download","ERROR -1")
-$installation_path = IniRead("credentials.ini","Paths","installation","ERROR -1")
-$defaultUsername = IniRead("credentials.ini","Credentials","username","ERROR -1")
-$defaultPassword = IniRead("credentials.ini","Credentials","password","ERROR -1")
+$configuration_file = getConfigurationFile(@WorkingDir&"\configuration.properties")
+$download_path = IniRead(@WorkingDir&"\credentials.ini","Paths","download","ERROR -1")
+$installation_path = IniRead(@WorkingDir&"\credentials.ini","Paths","installation","ERROR -1")
+$defaultUsername = IniRead(@WorkingDir&"\credentials.ini","Credentials","username","ERROR -1")
+$defaultPassword = IniRead(@WorkingDir&"\credentials.ini","Credentials","password","ERROR -1")
 
 
 getCredentials()
-;downloadEverything()
-;installEverything()
-;restart()
+downloadEverything()
+installEverything()
+restart()
 
 
 
@@ -55,7 +55,7 @@ FileClose("configuration.properties")
 
 Func restart()
    createStartupShortcut()
-   bypassLogin($username, $password)
+   bypassLogin($defaultUsername, $defaultPassword)
    reboot()
 EndFunc
 
@@ -233,5 +233,5 @@ Func getCredentials()
 EndFunc
 
 Func createStartupShortcut()
-   FileCreateShortcut(@workingdir&"\2 - secondPhase.au3",@StartupDir&"\firefoxStartup.lnk")
+   FileCreateShortcut(@workingdir&"\2 - secondPhase.au3",@StartupDir&"\firefoxStartup.lnk",@workingdir)
 EndFunc
