@@ -1,26 +1,27 @@
 #RequireAdmin
 
-
+HotKeySet("^+z", "Terminate")
 $configuration_file = getConfigurationFile(@WorkingDir&"\configuration.properties")
-$download_path = IniRead(@WorkingDir&"\credentials.ini","Paths","download","ERROR -1")
-$installation_path = IniRead(@WorkingDir&"\credentials.ini","Paths","installation","ERROR -1")
-$defaultUsername = IniRead(@WorkingDir&"\credentials.ini","Credentials","username","ERROR -1")
-$defaultPassword = IniRead(@WorkingDir&"\credentials.ini","Credentials","password","ERROR -1")
+$download_path = IniRead(@WorkingDir&"\configuration.ini","Paths","download","ERROR -1")
+$installation_path = IniRead(@WorkingDir&"\configuration.ini","Paths","installation","ERROR -1")
+$log_path = IniRead(@WorkingDir&"\configuration.ini","Paths","log","ERROR -1")
+$defaultUsername = IniRead(@WorkingDir&"\configuration.ini","Credentials","username","ERROR -1")
+$defaultPassword = IniRead(@WorkingDir&"\configuration.ini","Credentials","password","ERROR -1")
 
-;~ createLog()
+Global $log = createLog($log_path)
+addToLog("log created - script started")
+
+
 getCredentials()
 downloadEverything()
 installEverything()
 restart()
 
-
-
-
 Func downloadEverything()
    $version_counter = 1
-   ;~ MsgBox(0,"","open chrome",1)
+   MsgBox(0,"","open chrome",1)
    openChrome()
-   ;~ MsgBox(0,"","go to download",1)
+   MsgBox(0,"","go to download page",1)
    goToDownloadPage()
    While 1
 	  $version = getVersion($configuration_file, $version_counter)
@@ -34,21 +35,18 @@ Func downloadEverything()
 	  downloadOneVersion($version, $download_path)
 	  $version_counter = $version_counter + 1
    WEnd
-   MsgBox(0,"Done","Done downloading",2)
 EndFunc
 
 Func installEverything()
    $version_counter = 1
-   While 1
+   While getVersion($configuration_file, $version_counter) <> ""
 	  $version = getVersion($configuration_file, $version_counter)
-	  If $version = "" Then ExitLoop
-	  If $version_counter = 1 Then MsgBox(0,"","Run once download is finished",1)
-	  runDownloadedInstaller($version, $download_path)
-	  If $version_counter = 1 Then MsgBox(0,"","install",1)
-	  installFirefox($version, $installation_path)
+	  If $version_counter = 1 Then MsgBox(0,"","Run installer",1)
+	  if runDownloadedInstaller($version, $download_path) == 1 Then
+		 installFirefox($version, $installation_path)
+	  EndIf
 	  $version_counter = $version_counter + 1
-   WEnd   
-   MsgBox(0,"Done","Done installing",2)
+   WEnd
 EndFunc
 
 Func restart()
@@ -56,10 +54,15 @@ Func restart()
    createStartupShortcut()
    bypassLogin($defaultUsername, $defaultPassword)
    reboot()
+   FileClose($log)
 EndFunc
 
 Func openChrome()
-   Run("C:\Program Files (x86)\Google\Chrome\Application\chrome.exe")
+   if Run("C:\Program Files (x86)\Google\Chrome\Application\chrome.exe") = 0 Then
+	  addToLog("ERROR: could not open chrome")
+	  MsgBox(48,"ERROR","Could not open Chrome, please open manually or quit the script")
+   EndIf
+   
    WinWait("New Tab - Google Chrome")
    WinActivate("New Tab - Google Chrome")
    WinWaitActive("New Tab - Google Chrome")
@@ -73,7 +76,19 @@ Func goToDownloadPage()
    Send("^l")
    Send("http://www.oldapps.com/firefox.php")
    Send("{Enter}")
-   Sleep(3500)
+   $counter = 1
+   While WinWait("Old Version of Firefox Download - OldApps.com - Google Chrome","www.oldapps.com/firefox.php",3) = 0
+	  addToLog("ERROR: Could not load download page - retrying")
+	  WinActivate("New Tab - Google Chrome")
+	  Send("{f5}")
+	  
+	  if $counter > 3 Then
+		 addToLog("Done retrying to load the page - exiting")
+		 MsgBox(48,"ERROR","Could not load the download page, please check your internet connection and run the script again")
+		 Exit
+	  EndIf
+	  $counter = $counter + 1
+   WEnd  
 EndFunc
 
 Func findVersion($version)
@@ -106,19 +121,40 @@ Func downloadOneVersion($version, $download_path)
    Send("{esc}")
    Send("{tab}{tab}")
    Send("{enter}")
-   WinWaitActive("Save As")
-   sleep(50)
+   $counter = 1
+   while WinWaitActive("Save As", "", 10) = 0 And $counter < 4
+	  MsgBox(48,"",$counter,1)
+	  WinActivate("Download")
+	  Send("^f")
+	  Send($version)
+	  Send("{f3}")
+	  Send("{Esc}")
+	  send("{Enter}")		; direct download
+	  if WinWaitActive("Save As", "", 10) = 0 Then
+		 Send ("{f5}") 		; if still doesn't work, refresh the page
+	  Else
+		 ExitLoop			; if successfull, get out of loop and proceed
+	  EndIf
+	  $counter = $counter + 1
+	  if $counter => 4 Then
+		 addToLog("Could not download "&$version&", skipping")
+		 MsgBox(48,"","Could not download "&$version&", skipping",3)
+		 Return
+	  EndIf
+   WEnd
+   WinActivate("Save As")
    send($version&".exe")
-   Send("{tab}{tab}{tab}{tab}{tab}")
-   Send("{Enter}")
+   Send("{F4}")
+   Send("^a")
    Send($download_path&$version)
    Send("{Enter}")
    Sleep(30)
    Send("!s")
-   Sleep(50)
+   Sleep(150)
    if WinActive("Confirm Save As") Then ;in case of an overwrite
 	  Send("!y")
    EndIf
+   addToLog("began downloading "&$version)
    WinActivate("Old Version of "&$version&" Download - OldApps.com - Google Chrome")
    Sleep(30)
    Send("^w")
@@ -127,12 +163,26 @@ EndFunc
 
 Func runDownloadedInstaller($version, $download_path)
    $done = 0
+   $timer = 1
    While $done = 0
 	  $done = Run($download_path&$version&"\"&$version&".exe")
+	  Sleep(1000)
+	  if $timer = 2 Then
+		 MsgBox(0,"Wait","Don't worry, just waiting for the download to finish",3)
+	  ElseIf $timer = 4 Then
+		 MsgBox(0,"Wait","Still waiting",3)
+	  ElseIf $timer = 6 Then ;TODO: change times
+		 MsgBox(0,"Error","Well this is getting ridiculous, this download isn't going to finish. giving up", 5)
+		 addToLog("ERROR: Could not download "&$version)
+		 Return 0
+	  EndIf
+	  $timer = $timer + 1
    WEnd
+   Return 1
 EndFunc
 
 Func installFirefox($version, $installation_path)
+   addToLog("Installing "&$version)
    WinWait("Mozilla Firefox Setup")
    WinActivate("Mozilla Firefox Setup")
    WinWaitActive("Mozilla Firefox Setup")
@@ -150,7 +200,7 @@ Func installFirefox($version, $installation_path)
    Send("!ds") ;remove checkboxes (desktop and start menu)
    Sleep(100)
    Send("!n") ;next
-   Sleep(100)
+   Sleep(200)
    if (winGetText("Mozilla Firefox Setup", "Install")) <> "0" Then
 	  Send("!i") ;install
    ElseIf (winGetText("Mozilla Firefox Setup", "Upgrade")) <> "0" Then
@@ -161,6 +211,7 @@ Func installFirefox($version, $installation_path)
    Send("!l") ;don't launch
    Sleep(100)
    Send("!f") ;finish
+   addToLog($version&" installed")
 EndFunc
    
 Func ceateDownloadFolder($version, $download_path)
@@ -206,12 +257,18 @@ Func bypassLogin($username, $password)
    Send("{Enter}")
    Sleep(500)
    Send("{Enter}")
+   addToLog("Bypass login performed successfully")
 EndFunc
 
 Func reboot()
-   Run("shutdown -r -f -t 10")
-   sleep(2000)
-   Send("{Space}")
+   if Run("shutdown -r -f -t 20") <> 0 Then
+	  addToLog("rebooting")
+	  sleep(2000)
+	  Send("{Space}")
+   Else 
+	  addToLog("ERROR: can't reboot")
+	  MsgBox(48,"ERROR","ERROR: can't reboot, please restart manually")
+   EndIf
 EndFunc
 
 Func getUsername($defaultUsername)
@@ -232,5 +289,26 @@ Func getCredentials()
 EndFunc
 
 Func createStartupShortcut()
-   FileCreateShortcut(@workingdir&"\2 - secondPhase.au3",@StartupDir&"\firefoxStartup.lnk",@workingdir)
+   if FileCreateShortcut(@workingdir&"\2 - secondPhase.au3",@StartupDir&"\firefoxStartup.lnk",@workingdir) = 1 Then
+	  addToLog("startup shortcut was created successfully")
+   Else
+	  addToLog("ERROR: startup shortcut was NOT created")
+	  MsgBox(48,"ERROR","startup shortcut was NOT created, you will have to start the second phase manually after the restart")
+   EndIf
+EndFunc
+Func current_time()
+   Return @MDAY&"\"&@MON&"\"&@YEAR&"_"&@HOUR&":"&@MIN&":"&@SEC
+EndFunc
+
+Func createLog($path)
+   DirCreate($path)
+   Return FileOpen($path&"\"&@MDAY&"."&@MON&"."&@YEAR&"_"&@HOUR&@MIN&".log",1)
+EndFunc
+
+Func addToLog($String)
+   FileWriteLine($log,current_time()&" - "&$String)
+EndFunc
+   
+Func Terminate()
+    Exit 0
 EndFunc

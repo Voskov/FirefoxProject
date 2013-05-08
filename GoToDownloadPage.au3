@@ -1,5 +1,4 @@
 goToDownloadPage()
-
 Func goToDownloadPage()
    WinActivate("New Tab - Google Chrome")
    WinWaitActive("New Tab - Google Chrome")
@@ -7,11 +6,17 @@ Func goToDownloadPage()
    Send("^l")
    Send("http://www.oldapps.com/firefox.php")
    Send("{Enter}")
-   Sleep(5000)
-   If WinActive("lhttp://www?oldapps?com/firefox?php - Google Search - Google Chrome") Then
-	  MsgBox(0,"","Hebrew")
-	  Send ("!{Shift}")
-	  Send ("+{Tab}")
-	  Send("{Enter}")
-   EndIf
+   $counter = 1
+   While WinWait("Old Version of Firefox Download - OldApps.com - Google Chrome","www.oldapps.com/firefox.php",3) = 0
+	  addToLog("ERROR: Could not load download page - retrying")
+	  WinActivate("New Tab - Google Chrome")
+	  Send("{f5}")
+	  
+	  if $counter > 3 Then
+		 addToLog("Done retrying to load the page - exiting")
+		 MsgBox(48,"ERROR","Could not load the download page, please check your internet connection and run the script again")
+		 Exit
+	  EndIf
+	  $counter = $counter + 1
+   WEnd  
 EndFunc
