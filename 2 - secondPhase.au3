@@ -10,12 +10,12 @@ Global $log = FileOpen(IniRead(@WorkingDir&"\configuration.ini","Logs","last_log
 addToLog("Second phase has begun")
 
 
-;~ Send("#d")
-;~ Sleep(10000)
+Send("#d")
+Sleep(10000)
 openEveryFirefox()
-;~ verifyProccess()
-;~ undoStuff()
-;~ lookForErrors()
+verifyProccess()
+undoStuff()
+lookForErrors()
 
 
 Func undoStuff()
