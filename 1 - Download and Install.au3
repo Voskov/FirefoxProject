@@ -1,7 +1,8 @@
 #RequireAdmin
 
+Opt("WinTitleMatchMode", 2)
 HotKeySet("^+z", "Terminate")
-$configuration_file = getConfigurationFile(@WorkingDir&"\configuration.properties")
+$all_versions = getVersionsFile(@WorkingDir&"\versions.txt")
 $download_path = IniRead(@WorkingDir&"\configuration.ini","Paths","download","ERROR -1")
 $installation_path = IniRead(@WorkingDir&"\configuration.ini","Paths","installation","ERROR -1")
 $log_path = IniRead(@WorkingDir&"\configuration.ini","Paths","log","ERROR -1")
@@ -10,7 +11,6 @@ $defaultPassword = IniRead(@WorkingDir&"\configuration.ini","Credentials","passw
 
 Global $log = createLog($log_path)
 addToLog("log created - script started")
-
 
 getCredentials()
 downloadEverything()
@@ -24,7 +24,7 @@ Func downloadEverything()
    MsgBox(0,"","go to download page",1)
    goToDownloadPage()
    While 1
-	  $version = getVersion($configuration_file, $version_counter)
+	  $version = getVersion($all_versions, $version_counter)
 	  If $version = "" Then ExitLoop
 	  WinWaitActive("Old Version of Firefox Download - OldApps.com - Google Chrome")
 	  MsgBox(0,"","find version "&$version,1)
@@ -39,8 +39,8 @@ EndFunc
 
 Func installEverything()
    $version_counter = 1
-   While getVersion($configuration_file, $version_counter) <> ""
-	  $version = getVersion($configuration_file, $version_counter)
+   While getVersion($all_versions, $version_counter) <> ""
+	  $version = getVersion($all_versions, $version_counter)
 	  If $version_counter = 1 Then MsgBox(0,"","Run installer",1)
 	  if runDownloadedInstaller($version, $download_path) == 1 Then
 		 installFirefox($version, $installation_path)
@@ -50,7 +50,7 @@ Func installEverything()
 EndFunc
 
 Func restart()
-   FileClose("configuration.properties")
+   FileClose($all_versions)
    createStartupShortcut()
    bypassLogin($defaultUsername, $defaultPassword)
    reboot()
@@ -76,8 +76,9 @@ Func goToDownloadPage()
    Send("^l")
    Send("http://www.oldapps.com/firefox.php")
    Send("{Enter}")
+   Sleep(4000)
    $counter = 1
-   While WinWait("Old Version of Firefox Download - OldApps.com - Google Chrome","www.oldapps.com/firefox.php",3) = 0
+   While WinWait("Old Version of Firefox Download - OldApps.com - Google Chrome","www.oldapps.com/firefox.php",5) = 0
 	  addToLog("ERROR: Could not load download page - retrying")
 	  WinActivate("New Tab - Google Chrome")
 	  Send("{f5}")
@@ -122,8 +123,7 @@ Func downloadOneVersion($version, $download_path)
    Send("{tab}{tab}")
    Send("{enter}")
    $counter = 1
-   while WinWaitActive("Save As", "", 10) = 0 And $counter < 4
-	  MsgBox(48,"",$counter,1)
+   while WinWait("Save As", "", 10) = 0
 	  WinActivate("Download")
 	  Send("^f")
 	  Send($version)
@@ -136,9 +136,11 @@ Func downloadOneVersion($version, $download_path)
 		 ExitLoop			; if successfull, get out of loop and proceed
 	  EndIf
 	  $counter = $counter + 1
-	  if $counter => 4 Then
+	  if $counter >= 4 Then
 		 addToLog("Could not download "&$version&", skipping")
 		 MsgBox(48,"","Could not download "&$version&", skipping",3)
+		 WinActivate("Download")
+		 Send("^w")
 		 Return
 	  EndIf
    WEnd
@@ -167,11 +169,11 @@ Func runDownloadedInstaller($version, $download_path)
    While $done = 0
 	  $done = Run($download_path&$version&"\"&$version&".exe")
 	  Sleep(1000)
-	  if $timer = 2 Then
+	  if $timer = 5 Then
 		 MsgBox(0,"Wait","Don't worry, just waiting for the download to finish",3)
-	  ElseIf $timer = 4 Then
+	  ElseIf $timer = 15 Then
 		 MsgBox(0,"Wait","Still waiting",3)
-	  ElseIf $timer = 6 Then ;TODO: change times
+	  ElseIf $timer = 30 Then ;TODO: change times
 		 MsgBox(0,"Error","Well this is getting ridiculous, this download isn't going to finish. giving up", 5)
 		 addToLog("ERROR: Could not download "&$version)
 		 Return 0
@@ -221,18 +223,18 @@ Func ceateDownloadFolder($version, $download_path)
    EndIf
 EndFunc
 
-Func getConfigurationFile($file_name)
-   $configuration_file = FileOpen($file_name, 0)
+Func getVersionsFile($file_name)
+   $all_versions = FileOpen($file_name, 0)
    ; Check if file opened for reading OK
-   If $configuration_file = -1 Then
-	  MsgBox(0, "Error", "Unable to open the configuration file.")
+   If $all_versions = -1 Then
+	  MsgBox(0, "Error", "Unable to open the versions file.")
 	  Exit
    EndIf
-   Return $configuration_file
+   Return $all_versions
 EndFunc
 
-Func getVersion($configuration_file, $line)
-   $version = FileReadLine($configuration_file, $line)
+Func getVersion($all_versions, $line)
+   $version = FileReadLine($all_versions, $line)
    return $version
 EndFunc
 
@@ -289,7 +291,7 @@ Func getCredentials()
 EndFunc
 
 Func createStartupShortcut()
-   if FileCreateShortcut(@workingdir&"\2 - secondPhase.au3",@StartupDir&"\firefoxStartup.lnk",@workingdir) = 1 Then
+   if FileCreateShortcut(@workingdir&"\2 - secondPhase.exe",@StartupDir&"\firefoxStartup.lnk",@workingdir) = 1 Then
 	  addToLog("startup shortcut was created successfully")
    Else
 	  addToLog("ERROR: startup shortcut was NOT created")
@@ -302,6 +304,7 @@ EndFunc
 
 Func createLog($path)
    DirCreate($path)
+   IniWrite(@WorkingDir&"\configuration.ini","Logs","last_log",$path&@MDAY&"."&@MON&"."&@YEAR&"_"&@HOUR&@MIN&".log")
    Return FileOpen($path&"\"&@MDAY&"."&@MON&"."&@YEAR&"_"&@HOUR&@MIN&".log",1)
 EndFunc
 
@@ -310,5 +313,6 @@ Func addToLog($String)
 EndFunc
    
 Func Terminate()
-    Exit 0
+    addToLog("Script was terminated manually")
+	Exit 0
 EndFunc
