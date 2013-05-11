@@ -52,7 +52,9 @@ EndFunc
 Func restart()
    FileClose($all_versions)
    createStartupShortcut()
-   bypassLogin($defaultUsername, $defaultPassword)
+   If checkIfUserBoxChecked() = False Then
+	  bypassLogin($defaultUsername, $defaultPassword)
+   EndIf
    reboot()
    FileClose($log)
 EndFunc
@@ -321,3 +323,17 @@ Func welcomeMessage()
    MsgBox(0,"Welcome","Welcome to my script."&@LF&@LF&"You can always quit by pressing CTRL+SHIFT+Z"&@LF&@LF&"You will soon be asked for your username and your password, they are needed only to bypass the login after rebooting the system."&@LF&@LF&"The default values are in the config.ini file, so you can also change them there if you wish"&@LF&@LF&"I'm sure the script isn't bulletproof, if you encounter some sort of an error or it seems stuck, give it a nudge in the right direction."&@LF&@LF&"I hope you enjoy the script and that it will run as smoothly on your machine as it does on mine",10)
 EndFunc
  
+;This function checks whether the checkbox "Users must enter..." is checked
+;It does so by sampeling the color of the box below.
+;It's a rough patch, but it seems to work
+Func checkIfUserBoxChecked() 
+   Opt("PixelCoordMode", 0)
+   WinActivate("User Accounts")
+   If PixelGetColor(430,270) = 16777215 Then
+	  Return True
+   ElseIf PixelGetColor(430,270) = 15790320 Then
+	  Return False
+   Else
+	  Return 0
+   EndIf
+EndFunc
