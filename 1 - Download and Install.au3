@@ -11,7 +11,7 @@ $defaultPassword = IniRead(@WorkingDir&"\configuration.ini","Credentials","passw
 
 Global $log = createLog($log_path)
 addToLog("log created - script started")
-
+welcomeMessage()
 getCredentials()
 downloadEverything()
 installEverything()
@@ -274,13 +274,13 @@ Func reboot()
 EndFunc
 
 Func getUsername($defaultUsername)
-   $username = InputBox("Username", "Please type your system username. This is required to login later", $defaultUsername,"",-1,-1,500,400,2)
+   $username = InputBox("Username", "Please type your system username. This is required to login later", $defaultUsername,"",Default,Default,Default,Default,10)
    If $username = "" Then $username = $defaultUsername
    Return $username
 EndFunc
 
 Func getPassword($defaultPassword)
-   $password = InputBox("Password", "Please type your system password. This is required to login later", $defaultPassword,"*",-1,-1,500,400,2)
+   $password = InputBox("Password", "Please type your system password. This is required to login later", $defaultPassword,"*",Default,Default,Default,Default,10)
    If $password = "" Then $password = $defaultPassword
    Return $password
 EndFunc
@@ -313,6 +313,11 @@ Func addToLog($String)
 EndFunc
    
 Func Terminate()
-    addToLog("Script was terminated manually")
-	Exit 0
+   addToLog("Script was terminated manually")
+   Exit 0
 EndFunc
+ 
+Func welcomeMessage()
+   MsgBox(0,"Welcome","Welcome to my script."&@LF&@LF&"You can always quit by pressing CTRL+SHIFT+Z"&@LF&@LF&"You will soon be asked for your username and your password, they are needed only to bypass the login after rebooting the system."&@LF&@LF&"The default values are in the config.ini file, so you can also change them there if you wish"&@LF&@LF&"I'm sure the script isn't bulletproof, if you encounter some sort of an error or it seems stuck, give it a nudge in the right direction."&@LF&@LF&"I hope you enjoy the script and that it will run as smoothly on your machine as it does on mine",10)
+EndFunc
+ 
